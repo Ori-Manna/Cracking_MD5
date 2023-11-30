@@ -3,6 +3,7 @@ import hashlib
 import threading
 import time
 import logging
+import socket
 
 
 class HashSolver:
@@ -50,6 +51,7 @@ class ClientSolver:
     def __init__(self, code: str):
         self.hash = code
         self.need_work = True
+        self.socket = None
         self.segments_needed = cpu_count()
         self.threads = []
         for cpu in range(cpu_count()):
@@ -58,11 +60,20 @@ class ClientSolver:
             temp_thread = threading.Thread(target=temp_obj.check_range)
             temp_thread.start()
 
+    def connect(self):
+        """Connects to the server with a socket
+           sets the socket as self.socket
+           """
+        pass
+
     def get_work(self):
         """Get a segment for each thread that doesn't have a segment"""
-        pass
+        # Connect to server
+
+
 
     """Still need to finish the client class: need to write the "get_work" func
                                               need to write "assign_work" func
+                                              connect function
        Need to write the server class
     """
