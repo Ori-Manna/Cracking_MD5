@@ -4,6 +4,7 @@ import random
 import threading
 import time
 import logging
+import os
 
 
 def print_hex_encoding(num: int):
@@ -55,13 +56,17 @@ class HashSolver:
 def main():
     logging.basicConfig(level=logging.DEBUG,
                         format='[%(levelname)s] [%(asctime)s] (%(threadName)-10s) %(message)s')
-    num_encoded = str(random.randint(0, 9)) + str(random.randint(0, 9))
-    hashed_code = hashlib.md5(str(num_encoded).encode()).hexdigest()
 
     segments = []
     code_len = int(input("Code length: "))
     code_size = int(math.pow(10, code_len)) - 1
     seg_size = int(input("Segment length: "))
+
+    num_encoded = ""
+    for number in range(code_len):
+        num_encoded += str(random.randint(0, 9))
+    hashed_code = hashlib.md5(str(num_encoded).encode()).hexdigest()
+
     num = 0
     while num <= code_size:
         if num + seg_size > code_size:
@@ -72,19 +77,26 @@ def main():
 
     threads = []
 
-    thread_1_obj = HashSolver(hashed_code)
-    threads.append(thread_1_obj)
-    t_1 = threading.Thread(target=thread_1_obj.check_range)
-    t_1.start()
+    for cpu in range(os.cpu_count()):
+        temp_solver = HashSolver(hashed_code)
+        threads.append(temp_solver)
+        temp_thread = threading.Thread(target=temp_solver.check_range)
+        temp_thread.start()
 
-    thread_2_obj = HashSolver(hashed_code)
-    threads.append(thread_2_obj)
-    t_2 = threading.Thread(target=thread_2_obj.check_range)
-    t_2.start()
+    # thread_1_obj = HashSolver(hashed_code)
+    # threads.append(thread_1_obj)
+    # t_1 = threading.Thread(target=thread_1_obj.check_range)
+    # t_1.start()
+    #
+    # thread_2_obj = HashSolver(hashed_code)
+    # threads.append(thread_2_obj)
+    # t_2 = threading.Thread(target=thread_2_obj.check_range)
+    # t_2.start()
 
+    ran_through_all = False
     result = None
     found = False
-    while not found:
+    while (not found) and (not ran_through_all):
         for thread_obj in threads:
             if thread_obj.state == HashSolver.WAITING_FOR_WORK:
                 thread_obj.update_range(segments[0])
@@ -92,6 +104,8 @@ def main():
             elif thread_obj.state == HashSolver.FOUND:
                 found = True
                 result = thread_obj.result
+            if len(segments) == 0:
+                ran_through_all = True
 
     for i in threads:
         i.state = HashSolver.FOUND
