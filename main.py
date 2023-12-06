@@ -19,8 +19,9 @@ class HashSolver:
     WORK = 2
     FOUND = 3
 
-    def __init__(self, code: str):
+    def __init__(self, code: str, size: int):
         self.code = code
+        self.hash_size = size
         self.start_range = None
         self.end_range = None
         self.state = HashSolver.WAITING_FOR_WORK
@@ -32,7 +33,8 @@ class HashSolver:
         self.state = HashSolver.WORK
 
     def check_num(self, num) -> bool:
-        result = hashlib.md5(str(num).encode()).hexdigest()
+        num = str(num).zfill(self.hash_size)
+        result = hashlib.md5(num.encode()).hexdigest()
         logging.debug(f"The encoding of {num} is : {result}")
         if result == self.code:
             return True
@@ -70,7 +72,7 @@ def main():
     num = 0
     while num <= code_size:
         if num + seg_size > code_size:
-            segments.append((num, code_size))
+            segments.append((num, code_len, code_size))
         else:
             segments.append((num, num + seg_size - 1))
         num += seg_size
@@ -78,7 +80,7 @@ def main():
     threads = []
 
     for cpu in range(os.cpu_count()):
-        temp_solver = HashSolver(hashed_code)
+        temp_solver = HashSolver(hashed_code, code_len)
         threads.append(temp_solver)
         temp_thread = threading.Thread(target=temp_solver.check_range)
         temp_thread.start()
